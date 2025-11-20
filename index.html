@@ -1,0 +1,757 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AK STUDIO | Professional Digital Services</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons for high-quality SVG icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Tailwind Custom Configuration for Brand Colors and Fonts */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-navy': '#050612',
+                        'purple-accent': '#6B46FF',
+                        'neon-cyan': '#00E5FF',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'], /* Normal text */
+                        heading: ['Poppins', 'sans-serif'], /* Bold headings */
+                    },
+                    boxShadow: {
+                        'glow-purple': '0 0 15px rgba(107, 70, 255, 0.8)',
+                        'glow-cyan': '0 0 15px rgba(0, 229, 255, 0.8)',
+                    }
+                }
+            }
+        }
+
+        /* --- Custom CSS for Aesthetics and Animations (equivalent to style.css) --- */
+        body {
+            background-color: #050612;
+            color: #E2E8F0; /* Light gray text for contrast */
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden; /* Prevent horizontal scroll from particle canvas */
+            scroll-behavior: smooth;
+        }
+
+        /* Gradient Text Heading */
+        .gradient-text {
+            background-image: linear-gradient(90deg, #6B46FF, #00E5FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: rgba(107, 70, 255, 0.05); /* Very slight purple/dark base */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(107, 70, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        /* Fade-Up Animation (for Intersection Observer) */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Particle Canvas Styling */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10; /* Ensure it's behind all content */
+            pointer-events: none; /* Allows clicks to pass through */
+        }
+
+        /* Glowing Blobs (CSS implementation for simplicity) */
+        .blob {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            opacity: 0.2;
+            filter: blur(80px);
+            z-index: -5;
+            animation: pulse 15s infinite alternate;
+        }
+
+        .blob-1 {
+            background: linear-gradient(135deg, #6B46FF, #00E5FF);
+            top: 5vh;
+            left: 5vw;
+        }
+
+        .blob-2 {
+            background: linear-gradient(-45deg, #00E5FF, #6B46FF);
+            bottom: 10vh;
+            right: 15vw;
+            animation-delay: 3s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1) translate(0, 0); }
+            50% { transform: scale(1.2) translate(50px, -50px); }
+            100% { transform: scale(1) translate(0, 0); }
+        }
+
+        /* Active Navigation Highlight */
+        .nav-link.active {
+            color: #00E5FF;
+            text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-dark-navy min-h-screen">
+
+    <!-- Glowing Blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <!-- Particle Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Sticky Header/Navigation -->
+    <header id="header" class="sticky top-0 z-50 bg-dark-navy/95 backdrop-blur-sm shadow-xl shadow-dark-navy/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <!-- Logo -->
+            <a href="#home" class="text-3xl font-heading font-extrabold gradient-text tracking-wider">AK STUDIO</a>
+            
+            <!-- Navigation -->
+            <nav class="hidden md:flex space-x-8 font-medium">
+                <a href="#home" class="nav-link transition duration-300 hover:text-neon-cyan">Home</a>
+                <a href="#services" class="nav-link transition duration-300 hover:text-neon-cyan">Services</a>
+                <a href="#pricing" class="nav-link transition duration-300 hover:text-neon-cyan">Pricing</a>
+                <a href="#portfolio" class="nav-link transition duration-300 hover:text-neon-cyan">Portfolio</a>
+                <a href="#about" class="nav-link transition duration-300 hover:text-neon-cyan">About</a>
+                <a href="#contact" class="nav-link transition duration-300 hover:text-neon-cyan">Contact</a>
+            </nav>
+
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-button" class="md:hidden text-white hover:text-neon-cyan transition duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Drawer -->
+        <div id="mobile-menu" class="hidden md:hidden fixed inset-0 bg-dark-navy/95 backdrop-blur-xl z-40 p-6 pt-20">
+            <nav class="flex flex-col space-y-4 text-xl font-heading">
+                <a href="#home" class="nav-link py-2 transition duration-300 hover:text-neon-cyan">Home</a>
+                <a href="#services" class="nav-link py-2 transition duration-300 hover:text-neon-cyan">Services</a>
+                <a href="#pricing" class="nav-link py-2 transition duration-300 hover:text-neon-cyan">Pricing</a>
+                <a href="#portfolio" class="nav-link py-2 transition duration-300 hover:text-neon-cyan">Portfolio</a>
+                <a href="#about" class="nav-link py-2 transition duration-300 hover:text-neon-cyan">About</a>
+                <a href="#contact" class="nav-link py-2 transition duration-300 hover:text-neon-cyan">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 space-y-32">
+
+            <!-- ============================================= -->
+            <!-- 1. HOME PAGE CONTENT (index.html) -->
+            <!-- ============================================= -->
+            <section id="home" class="page-content min-h-[80vh] flex items-center">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    
+                    <!-- Left: Hero Text -->
+                    <div class="space-y-6 fade-up">
+                        <p class="text-lg font-medium text-neon-cyan tracking-widest uppercase">AK STUDIO: INNOVATE. AUTOMATE. SCALE.</p>
+                        <h1 class="text-6xl sm:text-7xl lg:text-8xl font-heading font-extrabold leading-tight">
+                            Elevate Your Digital <span class="gradient-text block">Presence Instantly.</span>
+                        </h1>
+                        <p class="text-xl text-gray-400 max-w-lg">
+                            Professional Digital Services by AK STUDIO: Integrating AI-powered solutions to drive exponential growth for your brand.
+                        </p>
+                        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
+                            <a href="https://wa.me/7599352406?text=Hi%20AK%20STUDIO%2C%20I%20want%20to%20book%20a%20service." target="_blank" class="bg-purple-accent text-white font-semibold py-3 px-8 rounded-xl transition duration-300 shadow-glow-purple hover:scale-[1.03] hover:bg-[#8A6DFF] transform">
+                                Book Now
+                            </a>
+                            <a href="#services" class="bg-transparent border border-neon-cyan text-neon-cyan font-semibold py-3 px-8 rounded-xl transition duration-300 hover:bg-neon-cyan/10 hover:shadow-glow-cyan transform">
+                                Explore Services
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Right: Image Placeholder -->
+                    <div class="fade-up lg:col-span-1 lg:order-last">
+                        <img src="https://placehold.co/800x600/050612/00E5FF?text=Hero+Image+Placeholder" alt="Digital Agency Placeholder" class="w-full h-auto rounded-3xl shadow-2xl border border-neon-cyan/20 object-cover hover:shadow-glow-cyan transition duration-500">
+                    </div>
+                </div>
+
+                <!-- Why Choose Us Section -->
+                <div class="pt-24 w-full">
+                    <h2 class="text-4xl font-heading font-bold text-center mb-16 fade-up">Why Choose <span class="gradient-text">AK STUDIO?</span></h2>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        
+                        <!-- Card 1 -->
+                        <div class="glass-card p-6 rounded-2xl flex flex-col items-center text-center hover:scale-[1.02] transition duration-300 fade-up">
+                            <div class="p-3 mb-4 rounded-full bg-purple-accent/20 border border-purple-accent text-purple-accent">
+                                <i data-lucide="zap" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-heading font-semibold mb-2 text-neon-cyan">Speed & Efficiency</h3>
+                            <p class="text-gray-400">Our streamlined, AI-assisted processes deliver projects faster without compromising quality or attention to detail.</p>
+                        </div>
+                        
+                        <!-- Card 2 -->
+                        <div class="glass-card p-6 rounded-2xl flex flex-col items-center text-center hover:scale-[1.02] transition duration-300 fade-up" style="transition-delay: 0.1s;">
+                            <div class="p-3 mb-4 rounded-full bg-neon-cyan/20 border border-neon-cyan text-neon-cyan">
+                                <i data-lucide="gem" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-heading font-semibold mb-2 text-purple-accent">Premium Quality</h3>
+                            <p class="text-gray-400">We maintain an unwavering commitment to professional standards, ensuring every deliverable is top-tier and polished.</p>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="glass-card p-6 rounded-2xl flex flex-col items-center text-center hover:scale-[1.02] transition duration-300 fade-up" style="transition-delay: 0.2s;">
+                            <div class="p-3 mb-4 rounded-full bg-purple-accent/20 border border-purple-accent text-purple-accent">
+                                <i data-lucide="dollar-sign" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-heading font-semibold mb-2 text-neon-cyan">Competitive Pricing</h3>
+                            <p class="text-gray-400">Get world-class services at transparent, affordable rates designed to maximize your ROI.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ============================================= -->
+            <!-- 2. SERVICES PAGE CONTENT (services.html) -->
+            <!-- ============================================= -->
+            <section id="services" class="page-content hidden pt-10">
+                <h2 class="text-5xl font-heading font-bold text-center mb-16 fade-up">Our <span class="gradient-text">Core Services</span></h2>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <!-- Service Card 1 -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4 flex flex-col justify-between transition duration-500 hover:border-neon-cyan hover:shadow-glow-cyan fade-up">
+                        <div class="flex items-start space-x-4">
+                            <i data-lucide="layout-grid" class="w-8 h-8 text-neon-cyan shrink-0"></i>
+                            <div>
+                                <h3 class="text-2xl font-heading font-semibold text-white">Web Designing</h3>
+                                <p class="text-gray-400 text-sm">Modern, responsive, and performance-optimized websites.</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-heading font-bold text-purple-accent border border-purple-accent px-3 py-1 rounded-full bg-purple-accent/10">₹9,999</span>
+                            <a href="#contact?service=Web_Design" class="text-neon-cyan font-medium hover:underline flex items-center">Book Now <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Service Card 2 -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4 flex flex-col justify-between transition duration-500 hover:border-neon-cyan hover:shadow-glow-cyan fade-up" style="transition-delay: 0.1s;">
+                        <div class="flex items-start space-x-4">
+                            <i data-lucide="palette" class="w-8 h-8 text-neon-cyan shrink-0"></i>
+                            <div>
+                                <h3 class="text-2xl font-heading font-semibold text-white">Graphic Designing</h3>
+                                <p class="text-gray-400 text-sm">Vibrant visual identities and compelling marketing materials.</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-heading font-bold text-purple-accent border border-purple-accent px-3 py-1 rounded-full bg-purple-accent/10">Varies by Scope</span>
+                            <a href="#contact?service=Graphic_Design" class="text-neon-cyan font-medium hover:underline flex items-center">Book Now <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Service Card 3 -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4 flex flex-col justify-between transition duration-500 hover:border-neon-cyan hover:shadow-glow-cyan fade-up" style="transition-delay: 0.2s;">
+                        <div class="flex items-start space-x-4">
+                            <i data-lucide="film" class="w-8 h-8 text-neon-cyan shrink-0"></i>
+                            <div>
+                                <h3 class="text-2xl font-heading font-semibold text-white">Video Editing</h3>
+                                <p class="text-gray-400 text-sm">Professional video content for social media and advertising campaigns.</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-heading font-bold text-purple-accent border border-purple-accent px-3 py-1 rounded-full bg-purple-accent/10">₹199</span>
+                            <a href="#contact?service=Video_Editing" class="text-neon-cyan font-medium hover:underline flex items-center">Book Now <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Service Card 4 -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4 flex flex-col justify-between transition duration-500 hover:border-neon-cyan hover:shadow-glow-cyan fade-up">
+                        <div class="flex items-start space-x-4">
+                            <i data-lucide="image" class="w-8 h-8 text-neon-cyan shrink-0"></i>
+                            <div>
+                                <h3 class="text-2xl font-heading font-semibold text-white">Photo Editing</h3>
+                                <p class="text-gray-400 text-sm">High-end retouching and correction for product and brand imagery.</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-heading font-bold text-purple-accent border border-purple-accent px-3 py-1 rounded-full bg-purple-accent/10">₹99</span>
+                            <a href="#contact?service=Photo_Editing" class="text-neon-cyan font-medium hover:underline flex items-center">Book Now <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></a>
+                        </div>
+                    </div>
+                    
+                    <!-- Service Card 5 -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4 flex flex-col justify-between transition duration-500 hover:border-neon-cyan hover:shadow-glow-cyan fade-up" style="transition-delay: 0.1s;">
+                        <div class="flex items-start space-x-4">
+                            <i data-lucide="shopping-bag" class="w-8 h-8 text-neon-cyan shrink-0"></i>
+                            <div>
+                                <h3 class="text-2xl font-heading font-semibold text-white">E-commerce Listing</h3>
+                                <p class="text-gray-400 text-sm">Optimized product listings for maximum visibility and sales conversion.</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-heading font-bold text-purple-accent border border-purple-accent px-3 py-1 rounded-full bg-purple-accent/10">₹149</span>
+                            <a href="#contact?service=Ecomm_Listing" class="text-neon-cyan font-medium hover:underline flex items-center">Book Now <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Service Card 6 -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4 flex flex-col justify-between transition duration-500 hover:border-neon-cyan hover:shadow-glow-cyan fade-up" style="transition-delay: 0.2s;">
+                        <div class="flex items-start space-x-4">
+                            <i data-lucide="store" class="w-8 h-8 text-neon-cyan shrink-0"></i>
+                            <div>
+                                <h3 class="text-2xl font-heading font-semibold text-white">Marketplace Account Setup</h3>
+                                <p class="text-gray-400 text-sm">Professional setup for Meesho, Flipkart, and Amazon Seller accounts.</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-heading font-bold text-purple-accent border border-purple-accent px-3 py-1 rounded-full bg-purple-accent/10">From ₹999</span>
+                            <a href="#contact?service=Account_Setup" class="text-neon-cyan font-medium hover:underline flex items-center">Book Now <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================= -->
+            <!-- 3. PRICING PAGE CONTENT (pricing.html) -->
+            <!-- ============================================= -->
+            <section id="pricing" class="page-content hidden pt-10">
+                <h2 class="text-5xl font-heading font-bold text-center mb-16 fade-up">Our <span class="gradient-text">Pricing Packages</span></h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    
+                    <!-- Pricing Card 1 -->
+                    <div class="glass-card p-8 rounded-2xl text-center flex flex-col justify-between border-2 border-transparent transition duration-500 group hover:border-purple-accent hover:shadow-glow-purple fade-up">
+                        <div class="space-y-4">
+                            <i data-lucide="send" class="w-10 h-10 mx-auto text-purple-accent group-hover:text-neon-cyan transition"></i>
+                            <h3 class="text-2xl font-heading font-semibold text-white">Meesho Starter</h3>
+                            <p class="text-gray-400">Account Setup + 50 Optimized Listings</p>
+                            <p class="text-5xl font-heading font-extrabold gradient-text">₹14,999</p>
+                        </div>
+                        <a href="#contact?package=Meesho_Starter" class="mt-8 block bg-purple-accent text-white font-semibold py-3 px-8 rounded-xl transition duration-300 hover:scale-[1.05] hover:shadow-glow-purple">Get Started</a>
+                    </div>
+                    
+                    <!-- Pricing Card 2 (Recommended) -->
+                    <div class="glass-card p-8 rounded-2xl text-center flex flex-col justify-between border-2 border-neon-cyan transition duration-500 group hover:border-purple-accent hover:shadow-glow-cyan relative fade-up" style="transition-delay: 0.1s;">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-neon-cyan text-dark-navy text-xs font-bold px-3 py-1 rounded-full shadow-glow-cyan">BEST VALUE</span>
+                        <div class="space-y-4">
+                            <i data-lucide="box" class="w-10 h-10 mx-auto text-neon-cyan group-hover:text-purple-accent transition"></i>
+                            <h3 class="text-2xl font-heading font-semibold text-white">Flipkart Pro</h3>
+                            <p class="text-gray-400">Account Setup + 50 Optimized Listings</p>
+                            <p class="text-5xl font-heading font-extrabold gradient-text">₹19,999</p>
+                        </div>
+                        <a href="#contact?package=Flipkart_Pro" class="mt-8 block bg-neon-cyan text-dark-navy font-semibold py-3 px-8 rounded-xl transition duration-300 hover:scale-[1.05] hover:shadow-glow-cyan">Get Started</a>
+                    </div>
+
+                    <!-- Pricing Card 3 -->
+                    <div class="glass-card p-8 rounded-2xl text-center flex flex-col justify-between border-2 border-transparent transition duration-500 group hover:border-purple-accent hover:shadow-glow-purple fade-up" style="transition-delay: 0.2s;">
+                        <div class="space-y-4">
+                            <i data-lucide="cloud" class="w-10 h-10 mx-auto text-purple-accent group-hover:text-neon-cyan transition"></i>
+                            <h3 class="text-2xl font-heading font-semibold text-white">Amazon Premier</h3>
+                            <p class="text-gray-400">Account Setup + 50 Optimized Listings</p>
+                            <p class="text-5xl font-heading font-extrabold gradient-text">₹20,499</p>
+                        </div>
+                        <a href="#contact?package=Amazon_Premier" class="mt-8 block bg-purple-accent text-white font-semibold py-3 px-8 rounded-xl transition duration-300 hover:scale-[1.05] hover:shadow-glow-purple">Get Started</a>
+                    </div>
+
+                    <!-- Pricing Card 4 -->
+                    <div class="glass-card p-8 rounded-2xl text-center flex flex-col justify-between border-2 border-transparent transition duration-500 group hover:border-neon-cyan hover:shadow-glow-cyan fade-up" style="transition-delay: 0.3s;">
+                        <div class="space-y-4">
+                            <i data-lucide="wand-2" class="w-10 h-10 mx-auto text-neon-cyan group-hover:text-purple-accent transition"></i>
+                            <h3 class="text-2xl font-heading font-semibold text-white">Custom Package</h3>
+                            <p class="text-gray-400">Tailored solutions for unique business requirements.</p>
+                            <p class="text-5xl font-heading font-extrabold gradient-text text-xl pt-6">Contact for Quote</p>
+                        </div>
+                        <a href="#contact?package=Custom_Quote" class="mt-8 block bg-transparent border border-neon-cyan text-neon-cyan font-semibold py-3 px-8 rounded-xl transition duration-300 hover:scale-[1.05] hover:bg-neon-cyan/10">Enquire Now</a>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ============================================= -->
+            <!-- 4. PORTFOLIO PAGE CONTENT (portfolio.html) -->
+            <!-- ============================================= -->
+            <section id="portfolio" class="page-content hidden pt-10">
+                <h2 class="text-5xl font-heading font-bold text-center mb-16 fade-up">Our Creative <span class="gradient-text">Showcase</span></h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Portfolio Item 1 -->
+                    <div class="rounded-xl overflow-hidden group relative transition duration-300 fade-up">>
+                        <img src=>
+                        <div class="absolute inset-0 bg-dark-navy/60 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center">
+                            <p class="text-xl font-heading text-white tracking-wider">Web Project Alpha</p>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 2 -->
+                    <div class="rounded-xl overflow-hidden group relative transition duration-300 fade-up" style="transition-delay: 0.1s;">
+                        <img src="https://placehold.co/600x400/050612/00E5FF?text=Portfolio+2" alt="Portfolio Project 2" class="w-full h-full object-cover rounded-xl transition duration-500 group-hover:scale-[1.05] border-2 border-transparent group-hover:border-neon-cyan group-hover:shadow-glow-cyan">
+                        <div class="absolute inset-0 bg-dark-navy/60 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center">
+                            <p class="text-xl font-heading text-white tracking-wider">Graphic Design</p>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 3 -->
+                    <div class="rounded-xl overflow-hidden group relative transition duration-300 fade-up" style="transition-delay: 0.2s;">
+                        <img src="https://placehold.co/600x400/050612/6B46FF?text=Portfolio+3" alt="Portfolio Project 3" class="w-full h-full object-cover rounded-xl transition duration-500 group-hover:scale-[1.05] border-2 border-transparent group-hover:border-neon-cyan group-hover:shadow-glow-cyan">
+                        <div class="absolute inset-0 bg-dark-navy/60 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center">
+                            <p class="text-xl font-heading text-white tracking-wider">Video Campaign</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Portfolio Item 4 -->
+                    <div class="rounded-xl overflow-hidden group relative transition duration-300 fade-up">
+                        <img src="https://placehold.co/600x400/050612/00E5FF?text=Portfolio+4" alt="Portfolio Project 4" class="w-full h-full object-cover rounded-xl transition duration-500 group-hover:scale-[1.05] border-2 border-transparent group-hover:border-neon-cyan group-hover:shadow-glow-cyan">
+                        <div class="absolute inset-0 bg-dark-navy/60 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center">
+                            <p class="text-xl font-heading text-white tracking-wider">E-comm Listing</p>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 5 -->
+                    <div class="rounded-xl overflow-hidden group relative transition duration-300 fade-up" style="transition-delay: 0.1s;">
+                        <img src="https://placehold.co/600x400/050612/6B46FF?text=Portfolio+5" alt="Portfolio Project 5" class="w-full h-full object-cover rounded-xl transition duration-500 group-hover:scale-[1.05] border-2 border-transparent group-hover:border-neon-cyan group-hover:shadow-glow-cyan">
+                        <div class="absolute inset-0 bg-dark-navy/60 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center">
+                            <p class="text-xl font-heading text-white tracking-wider">Account Setup</p>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 6 -->
+                    <div class="rounded-xl overflow-hidden group relative transition duration-300 fade-up" style="transition-delay: 0.2s;">
+                        <img src="https://placehold.co/600x400/050612/00E5FF?text=Portfolio+6" alt="Portfolio Project 6" class="w-full h-full object-cover rounded-xl transition duration-500 group-hover:scale-[1.05] border-2 border-transparent group-hover:border-neon-cyan group-hover:shadow-glow-cyan">
+                        <div class="absolute inset-0 bg-dark-navy/60 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center">
+                            <p class="text-xl font-heading text-white tracking-wider">Branding Kit</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================= -->
+            <!-- 5. ABOUT PAGE CONTENT (about.html) -->
+            <!-- ============================================= -->
+            <section id="about" class="page-content hidden pt-10">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    
+                    <!-- Right: About Image -->
+                    <div class="fade-up lg:order-last">
+                        <img src="https://placehold.co/800x600/050612/6B46FF?text=About+AK+STUDIO" alt="About AK STUDIO Placeholder" class="w-full h-auto rounded-3xl shadow-2xl border border-purple-accent/20 object-cover hover:shadow-glow-purple transition duration-500">
+                    </div>
+
+                    <!-- Left: Text Content -->
+                    <div class="space-y-6 fade-up">
+                        <h2 class="text-5xl font-heading font-bold gradient-text">About AK STUDIO</h2>
+                        <p class="text-lg text-gray-300">
+                            AK STUDIO is a modern digital agency specializing in high-impact, results-driven creative and technical services. Founded on the principle of efficiency, we leverage the latest tools and automation strategies—from AI-assisted graphic design to performance-optimized e-commerce solutions—to deliver professional quality at speed.
+                        </p>
+                        <p class="text-lg text-gray-300">
+                            We pride ourselves on being the go-to partner for businesses looking to establish a strong, polished, and scalable digital footprint without the complexities of traditional agency models. Whether it's a sleek new website, market-dominating product listings, or compelling video content, we ensure your brand shines in the crowded digital landscape.
+                        </p>
+                        <a href="#contact" class="inline-block bg-neon-cyan text-dark-navy font-semibold py-3 px-8 rounded-xl transition duration-300 hover:scale-[1.03] hover:shadow-glow-cyan transform mt-4">
+                            Work With Us
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================= -->
+            <!-- 6. CONTACT PAGE CONTENT (contact.html) -->
+            <!-- ============================================= -->
+            <section id="contact" class="page-content hidden pt-10">
+                <h2 class="text-5xl font-heading font-bold text-center mb-16 fade-up">Get in <span class="gradient-text">Touch</span></h2>
+                <div class="grid lg:grid-cols-2 gap-12">
+                    
+                    <!-- Left: WhatsApp Booking (Glassmorphism Box) -->
+                    <div class="glass-card p-8 rounded-2xl flex flex-col items-center justify-center text-center space-y-6 h-full fade-up">
+                        <i data-lucide="whatsapp" class="w-16 h-16 text-neon-cyan"></i>
+                        <h3 class="text-3xl font-heading font-bold text-white">Book Your Service</h3>
+                        <p class="text-gray-400">The fastest way to start your project is through direct WhatsApp consultation. Click below to chat now.</p>
+                        <a href="https://wa.me/7599352406?text=Hi%20AK%20STUDIO%2C%20I%20want%20to%20book%20a%20service." target="_blank" id="whatsapp-link-btn" class="bg-[#25D366] text-white font-semibold py-3 px-8 rounded-xl transition duration-300 shadow-lg shadow-green-600/50 hover:scale-[1.05] transform flex items-center space-x-2">
+                            <i data-lucide="message-square" class="w-5 h-5"></i>
+                            <span>Chat on WhatsApp</span>
+                        </a>
+                    </div>
+
+                    <!-- Right: Contact Form -->
+                    <div class="p-8 rounded-2xl bg-dark-navy/80 border border-purple-accent/30 shadow-2xl space-y-6 fade-up" style="transition-delay: 0.1s;">
+                        <h3 class="text-3xl font-heading font-bold text-white">Send Us a Quick Message</h3>
+                        <form id="contact-form" class="space-y-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-300 mb-1">Name</label>
+                                <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-lg bg-dark-navy border border-purple-accent/50 focus:border-neon-cyan focus:ring focus:ring-neon-cyan/20 text-white transition duration-200">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                                <input type="email" id="email" name="email" required class="w-full px-4 py-3 rounded-lg bg-dark-navy border border-purple-accent/50 focus:border-neon-cyan focus:ring focus:ring-neon-cyan/20 text-white transition duration-200">
+                            </div>
+                            <div>
+                                <label for="message" class="block text-sm font-medium text-gray-300 mb-1">Message</label>
+                                <textarea id="message" name="message" rows="4" required class="w-full px-4 py-3 rounded-lg bg-dark-navy border border-purple-accent/50 focus:border-neon-cyan focus:ring focus:ring-neon-cyan/20 text-white transition duration-200"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-purple-accent text-white font-semibold py-3 rounded-xl transition duration-300 hover:scale-[1.01] hover:bg-[#8A6DFF] transform shadow-lg shadow-purple-accent/50">
+                                Submit & Chat on WhatsApp
+                            </button>
+                        </form>
+                        <p id="form-message" class="text-sm text-center text-neon-cyan hidden pt-2">Redirecting to WhatsApp...</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="mt-20 py-12 border-t border-purple-accent/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 space-y-4">
+            <div class="flex justify-center space-x-6 font-medium">
+                <a href="#home" class="hover:text-neon-cyan transition duration-300">Home</a>
+                <a href="#services" class="hover:text-neon-cyan transition duration-300">Services</a>
+                <a href="#pricing" class="hover:text-neon-cyan transition duration-300">Pricing</a>
+                <a href="#contact" class="hover:text-neon-cyan transition duration-300">Contact</a>
+            </div>
+            <p>&copy; 2024 AK STUDIO. Professional Digital Services. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+    <!-- ============================================= -->
+    <!-- JAVASCRIPT LOGIC (equivalent to main.js and effects.js) -->
+    <!-- ============================================= -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Global state for page navigation
+        const pageSections = document.querySelectorAll('.page-content');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const header = document.getElementById('header');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        // --- 1. Multi-Page Simulation and Navigation ---
+
+        // Function to show the correct page based on hash
+        const navigateToPage = (hash) => {
+            const targetId = hash.startsWith('#') ? hash.substring(1).split('?')[0] : 'home';
+            const targetSection = document.getElementById(targetId);
+
+            pageSections.forEach(section => {
+                section.classList.add('hidden');
+                section.scrollTop = 0; // Reset scroll position for hidden sections
+            });
+
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            } else {
+                document.getElementById('home').classList.remove('hidden');
+            }
+
+            // Update active navigation link
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').split('?')[0] === hash.split('?')[0] || (hash === '' && link.getAttribute('href') === '#home')) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Close mobile menu on navigation
+            mobileMenu.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+
+            // Scroll to top of the content area
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // Event listener for hash change (simulates page load)
+        window.addEventListener('hashchange', () => {
+            navigateToPage(window.location.hash);
+        });
+
+        // Initial page load
+        window.addEventListener('load', () => {
+            navigateToPage(window.location.hash || '#home');
+        });
+
+        // Mobile Menu Toggle
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            // Prevent scrolling background when mobile menu is open
+            if (mobileMenu.classList.contains('hidden')) {
+                document.body.classList.remove('overflow-hidden');
+            } else {
+                document.body.classList.add('overflow-hidden');
+            }
+        });
+
+        // --- 2. Contact Form Handler (Redirect to WhatsApp) ---
+        const contactForm = document.getElementById('contact-form');
+        const formMessage = document.getElementById('form-message');
+
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+
+            // Simple message preparation
+            let whatsappMessage = `Hi AK STUDIO, I'm ${name} (${email}). I have a query regarding digital services. My message is: \n\n${message}`;
+            
+            // Check for service/package in URL hash parameters
+            const params = new URLSearchParams(window.location.hash.split('?')[1]);
+            const service = params.get('service');
+            const pkg = params.get('package');
+
+            if (service) {
+                whatsappMessage = `Hi AK STUDIO, I want to book the *${service.replace(/_/g, ' ')}* service. \n\nName: ${name} \nEmail: ${email} \nMessage: ${message}`;
+            } else if (pkg) {
+                 whatsappMessage = `Hi AK STUDIO, I'm interested in the *${pkg.replace(/_/g, ' ')}* package. \n\nName: ${name} \nEmail: ${email} \nMessage: ${message}`;
+            }
+
+            // Encode the message for the URL
+            const encodedMessage = encodeURIComponent(whatsappMessage);
+            const whatsappUrl = `https://wa.me/7599352406?text=${encodedMessage}`;
+
+            // Show message and redirect
+            formMessage.classList.remove('hidden');
+            setTimeout(() => {
+                window.open(whatsappUrl, '_blank');
+                // Optional: clear form and hide message after successful redirection
+                contactForm.reset();
+                formMessage.classList.add('hidden');
+            }, 500);
+        });
+
+        // --- 3. Fade-Up on-Scroll Animation (IntersectionObserver) ---
+        const observerOptions = {
+            root: null, // relative to the viewport
+            rootMargin: '0px',
+            threshold: 0.1 // trigger when 10% of the item is visible
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Stop observing once visible
+                }
+            });
+        }, observerOptions);
+
+        window.onload = () => {
+            // Observe all elements with the fade-up class
+            document.querySelectorAll('.fade-up').forEach(el => {
+                observer.observe(el);
+            });
+        };
+
+
+        // --- 4. Particle Network Animation (effects.js equivalent) ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const maxDistance = 100;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = document.body.scrollHeight; // Cover the full content height
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 1;
+                this.color = '#00E5FF'; // Neon Cyan dot
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 0.1,
+                    y: (Math.random() - 0.5) * 0.1
+                };
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            update() {
+                // Slow movement
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+
+                // Bounce off edges (optional, keeps them in view)
+                if (this.x < 0 || this.x > canvas.width) this.velocity.x *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.velocity.y *= -1;
+
+                this.draw();
+            }
+        }
+
+        function createParticles() {
+            const particleCount = Math.floor(canvas.width * canvas.height / 20000); // Density control
+            for (let i = 0; i < particleCount; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                particles.push(new Particle(x, y));
+            }
+        }
+
+        function connectParticles() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i; j < particles.length; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+                    const distance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
+                    if (distance < maxDistance) {
+                        const opacity = 1 - (distance / maxDistance);
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(107, 70, 255, ${opacity})`; // Purple lines
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            // Clear canvas, retaining the dark navy background implicitly via CSS
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Re-call resize to handle dynamic content/page height changes (essential for full-document particle coverage)
+            resizeCanvas(); 
+
+            connectParticles();
+            particles.forEach(p => p.update());
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        createParticles();
+        animateParticles();
+
+    </script>
+</body>
+</html>
